@@ -58,9 +58,4 @@ app.use(function(req, res){
     res.status(404);
 });
 
-// Tell STDOUT that the server is stopped
-// process.on('SIGTERM', () => {
-// 	server.close(() => {
-// 		console.log('Server stopped.');
-// 	});
-// });
+
