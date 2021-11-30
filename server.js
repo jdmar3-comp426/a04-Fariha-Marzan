@@ -21,13 +21,22 @@ app.get("/app/", (req, res, next) => {
 	res.status(200);
 });
 
+app.get("/", (req, res, next) => {
+    res.json({"message":"Your API works! (200)"});
+	res.status(200);
+});
+
 // Define other CRUD API endpoints using express.js and better-sqlite3
 // CREATE a new user (HTTP method POST) at endpoint /app/new/
 
 app.post("/app/new", (req, res) => {
-	const stmt = db.prepare("INSERT INTO userinfo (user, pass) VALUES (?, ?)");
+	const stmt = db.prepare('INSERT INTO userinfo (user, pass) VALUES (?, ?)');
 	const info = stmt.run(req.body.user, md5(req.body.pass));
-	res.status(201).json({"mesaage": info.changes + " record created: ID " + info.lastInsertRowid});
+	if(info.changes === 1) {
+		res.status(201).json({"mesaage": "One record created: ID" + info.lastInsertRowid + " (201)"});
+	} else {
+		res.status(409).json({"mesaage": "User already exists. (409)"});
+	}
 })
 
 // READ a list of all users (HTTP method GET) at endpoint /app/users/
@@ -37,11 +46,35 @@ app.get("/app/users", (req, res) => {
 });
 
 // READ a single user (HTTP method GET) at endpoint /app/user/:id
-	// req.params.id
+app.get("/app/user/:id", (req, res) => {	
+	const stmt = db.prepare("SELECT * FROM userinfo WHERE id = ?");
+	const result = stmt.get(req.params.id);
+	if(result === undefined) {
+		res.status(404).json({"message": "This user does not exist. (404)"})
+	} else {
+		res.status(200).json(result);
+	}
+});
 // UPDATE a single user (HTTP method PATCH) at endpoint /app/update/user/:id
-
+app.patch("/app/update/user/:id", (req, res) => {
+	const stmt = db.prepare('UPDATE userinfo SET user = COALESCE(?,user), pass = COALESCE(?,pass) WHERE id = ?');
+	const info = stmt.run(req.body.user, md5(req.body.pass), req.params.id);
+	if(info.changes === 1) {
+		res.status(200).json({"message": "One record created: ID " + req.params.id + " (200)"})
+	} else {
+		res.status(404).json({"message":"This user does not exist. (404)"})
+	}
+});
 // DELETE a single user (HTTP method DELETE) at endpoint /app/delete/user/:id
-
+app.delete("/app/delete/user/:id", (req, res) => {
+	const stmt = db.prepare('DELETE FROM userinfo WHERE id = ?');
+	const info = stmt.run(req.params.id);
+	if(info.changes === 1) {
+		res.status(200).json({"message":"One record deleted: ID " + req.params.id + " (200)"})
+	} else {
+		res.status(404).json({"message":"This user does not exist. (404)"})
+	}
+});
 // Default response for any other request
 app.use(function(req, res){
 	res.json({"message":"Endpoint not found. (404)"});
@@ -49,8 +82,8 @@ app.use(function(req, res){
 });
 
 // Tell STDOUT that the server is stopped
-process.on('SIGTERM', () => {
-	server.close(() => {
-		console.log('Server stopped.');
-	});
-});
+// process.on('SIGTERM', () => {
+// 	server.close(() => {
+// 		console.log('Server stopped.');
+// 	});
+// });
