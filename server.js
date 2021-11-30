@@ -17,10 +17,6 @@ app.listen(HTTP_PORT, () => {
 });
 
 // READ (HTTP method GET) at root endpoint /app/
-app.get("/", (req, res, next) => {
-    res.json({"message":"Your API works! (200)"});
-	res.status(200);
-});
 
 app.get("/app/", (req, res, next) => {
     res.json({"message":"Your API works! (200)"});
