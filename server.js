@@ -27,13 +27,8 @@ app.get("/app/", (req, res, next) => {
 // CREATE a new user (HTTP method POST) at endpoint /app/new/
 
 app.post("/app/new", (req, res) => {
-	const stmt = db.prepare('INSERT INTO userinfo (user, pass) VALUES (?, ?)');
-	const info = stmt.run(req.body.user, md5(req.body.pass));
-	if(info.changes === 1) {
-		res.status(201).json({"mesaage": "One record created: ID" + info.lastInsertRowid + " (201)"});
-	} else {
-		res.status(409).json({"mesaage": "User already exists. (409)"});
-	}
+	const stmt = db.prepare(`INSERT INTO userinfo (user, pass) VALUES (?, ?)`).run(req.body.user, md5(req.body.pass));
+	res.status(201).json({"message": `1 record created: ID ${stmt.lastInsertRowid} (201)`});
 })
 
 // READ a list of all users (HTTP method GET) at endpoint /app/users/
@@ -44,29 +39,18 @@ app.get("/app/users", (req, res) => {
 
 // READ a single user (HTTP method GET) at endpoint /app/user/:id
 app.get("/app/user/:id", (req, res) => {	
-	const stmt = db.prepare('SELECT * FROM userinfo WHERE id = ?');
-	const result = stmt.get(req.params.id);
-	if(result === undefined) {
-		res.status(404).json({"message": "This user does not exist. (404)"})
-	} else {
-		res.status(200).json(result);
-	}
+	const stmt = db.prepare(`SELECT * FROM userinfo WHERE id = ${req.params.id}`).get();
+	res.status(200).json(stmt);
 });
 // UPDATE a single user (HTTP method PATCH) at endpoint /app/update/user/:id
 app.patch("/app/update/user/:id", (req, res) => {
-	const stmt = db.prepare('UPDATE userinfo SET user = COALESCE(?,user), pass = COALESCE(?,pass) WHERE id = ?');
-	const info = stmt.run(req.body.user, md5(req.body.pass), req.params.id);
-	if(info.changes === 1) {
-		res.status(200).json({"message": "One record created: ID " + req.params.id + " (200)"})
-	} else {
-		res.status(404).json({"message":"This user does not exist. (404)"})
-	}
+	const stmt = db.prepare(`UPDATE userinfo SET user = COALESCE(?, user), pass = COALESCE(?, pass) WHERE id = ?`).run(req.body.user, md5(req.body.pass), req.params.id);
+    res.status(200).json({"message": `1 record updated: ID ${req.params.id} (200)`});
 });
 // DELETE a single user (HTTP method DELETE) at endpoint /app/delete/user/:id
 app.delete("/app/delete/user/:id", (req, res) => {
-	const stmt = db.prepare('DELETE FROM userinfo WHERE id = ?').run(req.params.id);
-	res.json({"message":`One record deleted: ID ${req.params.id} (200)`});
-	res.status(200);
+	const stmt = db.prepare(`DELETE FROM userinfo WHERE id = ?`).run(req.params.id);
+    res.status(200).json({"message": `1 record deleted: ID ${req.params.id} (200)`});
 });
 // Default response for any other request
 app.use(function(req, res){
