@@ -38,13 +38,13 @@ app.post("/app/new", (req, res) => {
 
 // READ a list of all users (HTTP method GET) at endpoint /app/users/
 app.get("/app/users", (req, res) => {	
-	const stmt = db.prepare("SELECT * FROM userinfo").all();
+	const stmt = db.prepare('SELECT * FROM userinfo').all();
 	res.status(200).json(stmt);
 });
 
 // READ a single user (HTTP method GET) at endpoint /app/user/:id
 app.get("/app/user/:id", (req, res) => {	
-	const stmt = db.prepare("SELECT * FROM userinfo WHERE id = ?");
+	const stmt = db.prepare('SELECT * FROM userinfo WHERE id = ?');
 	const result = stmt.get(req.params.id);
 	if(result === undefined) {
 		res.status(404).json({"message": "This user does not exist. (404)"})
@@ -64,13 +64,9 @@ app.patch("/app/update/user/:id", (req, res) => {
 });
 // DELETE a single user (HTTP method DELETE) at endpoint /app/delete/user/:id
 app.delete("/app/delete/user/:id", (req, res) => {
-	const stmt = db.prepare('DELETE FROM userinfo WHERE id = ?');
-	const info = stmt.run(req.params.id);
-	if(info.changes === 1) {
-		res.status(200).json({"message":"One record deleted: ID " + req.params.id + " (200)"})
-	} else {
-		res.status(404).json({"message":"This user does not exist. (404)"})
-	}
+	const stmt = db.prepare('DELETE FROM userinfo WHERE id = ?').run(req.params.id);
+	res.json({"message":`One record deleted: ID ${req.params.id} (200)`});
+	res.status(200);
 });
 // Default response for any other request
 app.use(function(req, res){
